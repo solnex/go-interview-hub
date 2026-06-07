@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Category counters
     const counts = {
         all: window.INTERVIEW_DATA.length,
-        web3: window.INTERVIEW_DATA.filter(q => q.category === 'Web3 核心').length,
         datastruct: window.INTERVIEW_DATA.filter(q => q.category === '数据结构').length,
         flow: window.INTERVIEW_DATA.filter(q => q.category === '流程控制').length,
         db: window.INTERVIEW_DATA.filter(q => q.category === '数据库').length,
@@ -43,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         statPracticeCompleted.textContent = masteredQuestions.size;
         
         document.getElementById('count-all').textContent = counts.all;
-        document.getElementById('count-web3').textContent = counts.web3;
         document.getElementById('count-datastruct').textContent = counts.datastruct;
         document.getElementById('count-flow').textContent = counts.flow;
         document.getElementById('count-db').textContent = counts.db;

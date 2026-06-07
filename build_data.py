@@ -5,11 +5,6 @@ import json
 # Define the file configurations with categories and valid question ranges
 FILES_CONFIG = [
     {
-        "path": "面试.md",
-        "category": "Web3 核心",
-        "range": range(1, 9)
-    },
-    {
         "path": "数据结构/数据结构01.md",
         "category": "数据结构",
         "range": range(1, 13)

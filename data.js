@@ -2,17 +2,6 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q1",
     "number": 1,
-    "title": "简述 GMP 模型？在处理海量 RPC 请求时，为什么 Go 比传统多线程更有优势？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "tip",
-      "text": "- **G (Goroutine)**: 用户态协程，初始仅占用极小栈内存（2KB）。\n- **M (Machine)**: 操作系统内核线程。\n- **P (Processor)**: 逻辑处理器，维护着本地 G 队列，是 M 执行 G 的必要上下文。"
-    },
-    "content": "**Web3 优势：**\nGo 采用 **Work Stealing（任务窃取）** 和 **Hand Off（挂起转移）** 机制。当某个 G 因为网络 RPC 请求或磁盘 IO 阻塞时，底层的 M 会和 P 解绑，P 会带着剩下的 G 寻找新的 M 继续执行。这种机制用极少的系统线程扛住了极高的并发连接，避免了内核态频繁切换的昂贵开销。\n\n---"
-  },
-  {
-    "id": "Q1",
-    "number": 1,
     "title": "连 nil 切片和空切片一不一样都不清楚？",
     "category": "数据结构",
     "core_answer": {
@@ -20,17 +9,6 @@ window.INTERVIEW_DATA = [
       "text": "- **nil 切片**：引用数组指针地址为 `0`（没有指向任何实际地址）。\n- **空切片**：引用数组指针地址是存在的，且固定为一个特定值。\n\n它们最大的区别在于**指向的底层数组引用地址是不一样的**。"
     },
     "content": "---"
-  },
-  {
-    "id": "Q2",
-    "number": 2,
-    "title": "什么是闭包？在 Web3 高频交易引擎中大量使用闭包有什么隐患？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "important",
-      "text": "闭包是函数及其捕获的外部变量的结合体。"
-    },
-    "content": "**工程隐患（内存逃逸）：**\n为了保证闭包在外部函数结束后依然能安全访问这些变量，Go 编译器会触发**内存逃逸**，将本该分配在栈上的局部变量转移到堆上。\n\n**后果：**\n在每秒十万级的解析或高频交易机器人中，滥用闭包会导致堆内存碎片激增，给垃圾回收器（GC）带来巨大压力，进而引发微小的 **STW (Stop The World)** 延迟。建议在热点代码路径中通过显式传参来替代闭包捕获。\n\n---"
   },
   {
     "id": "Q2",
@@ -46,17 +24,6 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q3",
     "number": 3,
-    "title": "`sync.WaitGroup` 有哪些致命考点？高并发下如何实现“一处报错，全局取消”？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "caution",
-      "text": "- **致命考点**：绝对不能按值传递 `WaitGroup`，否则会导致内部计数器和锁状态被拷贝，引发死锁（Deadlock）；`Add()` 必须写在 `go` 关键字启动协程的外部，以防竞态条件。"
-    },
-    "content": "**进阶扩展：**\n`WaitGroup` 无法传递错误。在向多个节点并发查询余额时，应使用 `golang.org/x/sync/errgroup`。它结合了 `Context`，一旦某个协程报错，会立即触发 `Context` 的 `Cancel`，从而掐断其他冗余的 RPC 请求。\n\n---\n\n## 模块二：Channel 同步机制与业务映射"
-  },
-  {
-    "id": "Q3",
-    "number": 3,
     "title": "如何翻转含有中文、数字、英文字母的字符串？",
     "category": "数据结构",
     "core_answer": {
@@ -64,17 +31,6 @@ window.INTERVIEW_DATA = [
       "text": "应将字符串转换为 **`[]rune` 切片**，再进行位置翻转。"
     },
     "content": "**解析：**\n- **`rune` 关键字**：是 `int32` 的别名（范围为 $-2^{31} \\sim 2^{31}-1$）。相比 `byte`（`uint8` 的别名，范围 $0 \\sim 255$），`rune` 可以表示更多的字符。\n- **中文处理**：由于中文在 UTF-8 下占用 3 个字节，使用 `byte` 会导致中文字符被截断乱码。而 `rune` 能够完美处理所有的 Unicode 字符（包括中文字符、表情符号等）。\n- **步骤**：将字符串转换为 `[]rune` 之后，使用双指针首尾交换，最后再转回 `string` 即可。\n\n---"
-  },
-  {
-    "id": "Q4",
-    "number": 4,
-    "title": "有缓冲 Channel 和无缓冲 Channel 的本质区别是什么？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "tip",
-      "text": "**核心回答：** 它们对应了两种截然不同的架构思维：\n- **无缓冲 Channel (类似 TCP)**: 强同步、强耦合。发送者和接收者必须同时就绪才能完成“握手”。适用于确保状态绝对一致的场景，例如交易发送模块与数据库落库模块的确认机制，防止 Nonce 跳号。\n- **有缓冲 Channel (类似 UDP)**: 异步、解耦。自带环形队列（Buffer），只要没满发送者就不会阻塞。适用于高吞吐量的流水线，例如作为区块扫描器（拉取快）和解析器（入库慢）之间的“消峰填谷”缓冲区。"
-    },
-    "content": "---"
   },
   {
     "id": "Q4",
@@ -90,17 +46,6 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q5",
     "number": 5,
-    "title": "`for range channel` 和普通数组的 `foreach` 有什么区别？监听链上事件时应注意什么？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "important",
-      "text": "`range channel` 永远不会主动结束，除非该 Channel 被显式 `close`。如果发送端忘记关闭，会导致接收协程永久阻塞（Goroutine 泄漏）。"
-    },
-    "content": "**实战建议：**\n监听链上 Event Logs 时，不推荐单一的 `range`，而应该使用 `for-select` 结构，同时监听数据 Channel 和上下文取消/错误信号（如 `ctx.Done()` 或 `sub.Err()`），保证程序的健壮性。\n\n---\n\n## 模块三：Web3 核心交互与数据工程"
-  },
-  {
-    "id": "Q5",
-    "number": 5,
     "title": "map 不初始化直接使用会怎么样？",
     "category": "数据结构",
     "core_answer": {
@@ -108,17 +53,6 @@ window.INTERVIEW_DATA = [
       "text": "只声明但没有初始化的 map 其默认值是 `nil`。\n- **写入（Write）**：向 `nil` map 中写入数据会**直接触发 Panic 崩溃**（`panic: assignment to entry in nil map`）。\n- **读取（Read）/ 删除（Delete）/ 长度（Len）**：对 `nil` map 进行读取、删除键、或者获取长度都不会崩溃，而是会安全地返回零值或 `0`。"
     },
     "content": "---"
-  },
-  {
-    "id": "Q6",
-    "number": 6,
-    "title": "高并发发交易时，如何管理 Nonce 以避免冲突和跳号？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "tip",
-      "text": "绝对不能依赖每次发交易前去链上 `PendingNonceAt`，因为 RPC 有延迟且状态不可靠。"
-    },
-    "content": "**解决方案：**\n1. 在本地（如 Redis 或内存池）维护一个自增的 **Local Nonce**。\n2. 结合状态机和无缓冲 Channel 的握手机制：只有当交易在本地数据库安全 `Insert` 成功后，Local Nonce 才可以安全 `+1`。\n3. 写一个后台纠错协程，定期与链上真实 Nonce 进行对账校准。\n\n---"
   },
   {
     "id": "Q6",
@@ -134,17 +68,6 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q7",
     "number": 7,
-    "title": "对比顺序扫链与并发扫链，在工程架构上需要做哪些容错处理？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "important",
-      "text": "- **顺序扫**：速度慢，但数据绝对有序，逻辑简单。\n- **并发扫**：速度极快（多协程同时拉取），但会引发两大问题：节点限流和数据乱序。"
-    },
-    "content": "**解决方案：**\n必须使用容量受限的 Channel 作为信号量（Semaphore）控制并发度防封 IP；落库时不能假设数据有序，需在应用层或 SQL 层面（通过区块高度）进行二次排序保障业务正确。\n\n---"
-  },
-  {
-    "id": "Q7",
-    "number": 7,
     "title": "map 底层数据结构是什么？",
     "category": "数据结构",
     "core_answer": {
@@ -152,17 +75,6 @@ window.INTERVIEW_DATA = [
       "text": "Go 语言的 map 底层是一个带有**增量扩容功能的哈希表（Hash Table）**。它的核心实现由两个结构体组成：`hmap`（管理结构）和 `bmap`（存储键值对的桶）。"
     },
     "content": "**一、 核心结构体拆解**\n\n1. **顶层管理结构：`hmap`**\n   ```go\n   type hmap struct {\n       count      int            // 当前 map 中的元素个数（len() 返回的值）\n       flags      uint8          // 状态标志（如是否正在被写入、扩容中等）\n       B          uint8          // 2^B 个桶。也就是说桶的数量总是 2 的倍数\n       noverflow  uint16         // 溢出桶的大致数量\n       hash0      uint32         // 哈希种子，在 map 创建时随机生成，用以防止哈希碰撞攻击\n       buckets    unsafe.Pointer // 指向桶数组的指针（大小为 2^B）\n       oldbuckets unsafe.Pointer // 扩容时，指向旧桶数组的指针（平时为 nil）\n       nevacuate  uintptr        // 扩容进度计数器，表示已经搬迁了多少个桶\n       extra      *mapextra      // 存储溢出桶等额外信息的字段\n   }\n   ```\n\n2. **数据实体：`bmap`（桶 Bucket）**\n   `hmap.buckets` 指向的是一个 `bmap` 数组。每个 `bmap` 固定只能存放 **8 个键值对（key-value）**。在编译阶段，编译器会动态为它生成一个复杂的结构：\n   ```go\n   type bmap struct {\n       // 1. 长度为 8 的数组，存放 8 个 key 的哈希值高 8 位（Top Hash）\n       // 用来在桶内快速比对 key 是否匹配\n       tophash [bucketCnt]uint8\n       \n       // 2. 紧接着存放 8 个 key（内存紧凑排列）\n       // keys   [8]keyType\n       \n       // 3. 再紧接着存放 8 个 value（内存紧凑排列）\n       // values [8]valueType\n       \n       // 4. 指向下个溢出桶的指针（当桶满了，但又有新数据落到这个桶时，用来挂载新桶）\n       // overflow *bmap\n   }\n   ```\n   > **💡 细节设计：为什么要 key 放一堆，value 放一堆？**\n   > Go 故意将 `keys` 在前，`values` 在后排列，是为了**消除因为内存对齐（Memory Alignment）带来的填充浪费**。例如 `map[int64]int8`，如果交替放置，每个 `int8` 后面都要补 7 个字节的填充；而分开放置，只需在整体衔接处对齐一次，极大地节省了内存。\n\n**二、 数据存取原理（寻址流程）**\n当我们执行 `v := m[\"apple\"]` 时，底层的运转逻辑如下：\n1. **计算哈希值**：将 key（`\"apple\"`）结合 `hmap.hash0` 种子，计算出一个 64 位的哈希值。\n2. **寻找对应的桶**：取哈希值的低 `B` 位。例如 `B=3`，则桶的数量是 $2^3 = 8$。取哈希值的最后 3 位（假设是 `011`，即十进制的 3），那就说明这个 key 落在 3 号桶里。\n3. **在桶内寻找 Key**：取哈希值的高 8 位（`tophash`）。先去 3 号桶的 `tophash` 数组里快速比对。如果发现 `tophash[2]` 匹配上了，才会进一步去对比 `keys[2]` 是不是真的是 `\"apple\"`。\n4. **哈希冲突（链地址法）**：如果 3 号桶的 8 个位置都塞满了，Go 会通过 `overflow` 指针拉出一个溢出桶，像拉链法一样挂在后面，继续往溢出桶里存取。\n\n**三、 核心机制：渐进式扩容**\n当 map 越来越大时，哈希冲突增多导致溢出桶拉得太长，性能会急剧下降。此时 map 就会触发扩容。\n- **触发时机**：\n  1. **翻倍扩容**：当 **元素个数 / 桶的个数 > 6.5**。说明桶快不够用了，Go 会开辟一个大小为原来 2 倍的新桶数组（`B` 变成 `B+1`）。\n  2. **等量扩容**：如果元素不多，但溢出桶多得离谱（由于频繁删除和插入导致的空洞）。Go 会开辟一个和原来一样大的新桶数组，把数据重新整理、排紧凑。\n- **增量式搬迁**：\n  Go 采用渐进式扩容策略：当触发扩容时，只创建新桶，不立刻搬迁数据。随后，**每次用户对该 map 进行写入、修改、删除操作时，Go 会顺手搬迁当前操作的桶以及顺位桶（一共 1~2 个桶）**。随着用户请求的不断涌入，旧桶的数据逐步被搬空，最终老内存被垃圾回收（GC），避免了单次扩容导致的瞬时卡顿。\n\n---"
-  },
-  {
-    "id": "Q8",
-    "number": 8,
-    "title": "当项目从单机脚本演进为大型 Indexer 时，为何要用 Kafka 替代 Channel？",
-    "category": "Web3 核心",
-    "core_answer": {
-      "type": "tip",
-      "text": "`Channel` 存在于内存中，存在宕机丢失数据的风险，且无法跨进程共享。引入 Kafka 可以实现："
-    },
-    "content": "- **崩溃恢复**：数据落盘持久化，依靠 Offset 实现断点续扫，防止链上数据漏掉。\n- **服务解耦与扩展**：扫链模块与入库模块彻底分离，行情火爆时可以独立增加下游消费者（DB Worker）的数量。\n- **多路分发 (Fan-out)**：一份区块数据，可以同时给入库微服务、风控报警微服务、缓存更新微服务独立消费，互不干扰。"
   },
   {
     "id": "Q8",
