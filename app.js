@@ -72,8 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Custom marked renderer to inject copy buttons into pre blocks
     const renderer = new marked.Renderer();
     renderer.code = function(code, infostring, escaped) {
-        const lang = (infostring || '').match(/\S*/)[0];
-        const cleanCode = escapeHtml(code);
+        let text = '';
+        let lang = '';
+        
+        if (typeof code === 'object' && code !== null) {
+            text = code.text || '';
+            lang = code.lang || '';
+        } else {
+            text = code || '';
+            lang = infostring || '';
+        }
+        
+        lang = (lang || '').match(/\S*/)[0];
+        const cleanCode = escapeHtml(text);
         return `<pre class="language-${lang}"><button class="copy-code-btn" onclick="copyCodeBlock(this)"><i class="fa-regular fa-copy"></i> Copy</button><code class="language-${lang}">${cleanCode}</code></pre>`;
     };
     marked.use({ renderer });
