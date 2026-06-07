@@ -6,8 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchQuery = '';
     let isPracticeMode = false;
     
-    // Load mastered questions from localStorage
-    const masteredQuestions = new Set(JSON.parse(localStorage.getItem('mastered_questions') || '[]'));
+    // Load mastered questions from localStorage safely
+    let masteredQuestions = new Set();
+    try {
+        const stored = localStorage.getItem('mastered_questions');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                masteredQuestions = new Set(parsed);
+            }
+        }
+    } catch (e) {
+        console.error("Failed to load mastered questions:", e);
+    }
     
     // Keep track of which cards are temporarily revealed in practice mode during this session
     const sessionRevealed = new Set();
@@ -26,27 +37,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const statTotalCount = document.getElementById('stat-total-count');
     const statPracticeCompleted = document.getElementById('stat-practice-completed');
     
-    // Category counters
+    // Category counters safely checked
     const counts = {
-        all: window.INTERVIEW_DATA.length,
-        datastruct: window.INTERVIEW_DATA.filter(q => q.category === '数据结构').length,
-        flow: window.INTERVIEW_DATA.filter(q => q.category === '流程控制').length,
-        db: window.INTERVIEW_DATA.filter(q => q.category === '数据库').length,
-        perf: window.INTERVIEW_DATA.filter(q => q.category === '性能优化').length,
-        concurrent: window.INTERVIEW_DATA.filter(q => q.category === '并发编程').length
+        all: (window.INTERVIEW_DATA || []).length,
+        datastruct: (window.INTERVIEW_DATA || []).filter(q => q.category === '数据结构').length,
+        flow: (window.INTERVIEW_DATA || []).filter(q => q.category === '流程控制').length,
+        db: (window.INTERVIEW_DATA || []).filter(q => q.category === '数据库').length,
+        perf: (window.INTERVIEW_DATA || []).filter(q => q.category === '性能优化').length,
+        concurrent: (window.INTERVIEW_DATA || []).filter(q => q.category === '并发编程').length
+    };
+
+    // Helper to safely set text content of elements if they exist
+    const safeSetText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
     };
 
     // 3. Initialize Stats and Badges
     function initStats() {
-        statTotalCount.textContent = window.INTERVIEW_DATA.length;
-        statPracticeCompleted.textContent = masteredQuestions.size;
+        if (statTotalCount) statTotalCount.textContent = (window.INTERVIEW_DATA || []).length;
+        if (statPracticeCompleted) statPracticeCompleted.textContent = masteredQuestions.size;
         
-        document.getElementById('count-all').textContent = counts.all;
-        document.getElementById('count-datastruct').textContent = counts.datastruct;
-        document.getElementById('count-flow').textContent = counts.flow;
-        document.getElementById('count-db').textContent = counts.db;
-        document.getElementById('count-perf').textContent = counts.perf;
-        document.getElementById('count-concurrent').textContent = counts.concurrent;
+        safeSetText('count-all', counts.all);
+        safeSetText('count-datastruct', counts.datastruct);
+        safeSetText('count-flow', counts.flow);
+        safeSetText('count-db', counts.db);
+        safeSetText('count-perf', counts.perf);
+        safeSetText('count-concurrent', counts.concurrent);
+        
+        // Also support older cached HTML with count-web3 if needed
+        safeSetText('count-web3', (window.INTERVIEW_DATA || []).filter(q => q.category === 'Web3 核心').length);
     }
 
     // 4. Custom Markdown Renderer Settings (marked.js)
