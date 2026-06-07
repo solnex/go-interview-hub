@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Go & Web3 后端高级研发面试精华指南</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Prism.js Tomorrow Night Theme for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    
+    <!-- Glow Effects -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-cubes-stacked brand-icon"></i>
+                <div class="brand-text">
+                    <h1>Go Web3</h1>
+                    <span>Interview Hub</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="nav-item active" data-category="all">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>全部模块</span>
+                    <span class="count-badge" id="count-all">0</span>
+                </button>
+                <button class="nav-item" data-category="Web3 核心">
+                    <i class="fa-brands fa-ethereum"></i>
+                    <span>Web3 核心</span>
+                    <span class="count-badge" id="count-web3">0</span>
+                </button>
+                <button class="nav-item" data-category="数据结构">
+                    <i class="fa-solid fa-sitemap"></i>
+                    <span>数据结构</span>
+                    <span class="count-badge" id="count-datastruct">0</span>
+                </button>
+                <button class="nav-item" data-category="流程控制">
+                    <i class="fa-solid fa-code-branch"></i>
+                    <span>流程控制</span>
+                    <span class="count-badge" id="count-flow">0</span>
+                </button>
+                <button class="nav-item" data-category="数据库">
+                    <i class="fa-solid fa-database"></i>
+                    <span>数据库</span>
+                    <span class="count-badge" id="count-db">0</span>
+                </button>
+                <button class="nav-item" data-category="性能优化">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>性能优化</span>
+                    <span class="count-badge" id="count-perf">0</span>
+                </button>
+                <button class="nav-item" data-category="并发编程">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>并发编程</span>
+                    <span class="count-badge" id="count-concurrent">0</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="theme-toggle-container">
+                    <span>外观主题</span>
+                    <button id="theme-toggle-btn" class="theme-btn">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="header">
+                <div class="header-search">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="搜索面试题、关键字（如 GMP、sync.Map、escape）...">
+                    <button id="search-clear-btn" class="search-clear"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="header-controls">
+                    <div class="control-switch-container">
+                        <span class="switch-label">
+                            <i class="fa-solid fa-graduation-cap"></i> 背题模式
+                        </span>
+                        <label class="switch">
+                            <input type="checkbox" id="practice-mode-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard / Overview -->
+            <section class="dashboard-banner">
+                <div class="banner-title">
+                    <h2>Go & Web3 后端高级研发面试精华指南</h2>
+                    <p>汇集 77 道工业级高频面试绝杀，深入源码机制与生产实战避坑指南</p>
+                </div>
+                <div class="stats-panel">
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-total-count">77</span>
+                        <span class="stat-label">总题目数</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-parsed-categories">6</span>
+                        <span class="stat-label">核心模块</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-num" id="stat-practice-completed">0</span>
+                        <span class="stat-label">已掌握 (背题模式)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Questions Container -->
+            <section class="questions-section">
+                <div class="section-title">
+                    <h3 id="current-category-title">全部面试题</h3>
+                    <span id="results-count" class="results-badge">共 77 条</span>
+                </div>
+
+                <div id="questions-wrapper" class="questions-wrapper">
+                    <!-- Cards will be dynamically injected here by app.js -->
+                    <div class="loading-state">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>正在加载面试题库...</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <!-- Prism Languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    
+    <!-- Loaded compiled data -->
+    <script src="data.js"></script>
+    
+    <!-- App Main Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
