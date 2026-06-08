@@ -816,7 +816,7 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q75",
     "number": 75,
-    "title": "### Q75. 开源库里会有一些类似下面这种奇怪的用法：var _ io.Writer = (*myWriter)(nil)，是为什么？",
+    "title": "开源库里会有一些类似下面这种奇怪的用法：var _ io.Writer = (*myWriter)(nil)，是为什么？",
     "category": "高级特性",
     "core_answer": {
       "type": "tip",
@@ -981,7 +981,7 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q90",
     "number": 90,
-    "title": "### Q90. Goroutine 什么时候会被挂起？",
+    "title": "Goroutine 什么时候会被挂起？",
     "category": "高级特性",
     "core_answer": {
       "type": "tip",
@@ -1003,7 +1003,7 @@ window.INTERVIEW_DATA = [
   {
     "id": "Q92",
     "number": 92,
-    "title": "### Q92. golang 触发异常的场景有哪些？",
+    "title": "golang 触发异常的场景有哪些？",
     "category": "高级特性",
     "core_answer": {
       "type": "tip",
