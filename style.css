@@ -887,6 +887,7 @@ code[class*="language-"] {
 pre code,
 pre code[class*="language-"] {
     background: transparent !important;
+    color: #e2e8f0 !important;
     padding: 0 !important;
     border-radius: 0;
     line-height: 1.45 !important;
