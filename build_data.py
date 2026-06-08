@@ -38,6 +38,21 @@ FILES_CONFIG = [
         "path": "进阶/并发编程.md",
         "category": "并发编程",
         "range": range(60, 70)
+    },
+    {
+        "path": "进阶/高级特性01.md",
+        "category": "高级特性",
+        "range": range(70, 78)
+    },
+    {
+        "path": "进阶/高级特性02.md",
+        "category": "高级特性",
+        "range": range(78, 86)
+    },
+    {
+        "path": "进阶/高级特性03.md",
+        "category": "高级特性",
+        "range": range(86, 94)
     }
 ]
 

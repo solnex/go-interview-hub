@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
         flow: (window.INTERVIEW_DATA || []).filter(q => q.category === '流程控制').length,
         db: (window.INTERVIEW_DATA || []).filter(q => q.category === '数据库').length,
         perf: (window.INTERVIEW_DATA || []).filter(q => q.category === '性能优化').length,
-        concurrent: (window.INTERVIEW_DATA || []).filter(q => q.category === '并发编程').length
+        concurrent: (window.INTERVIEW_DATA || []).filter(q => q.category === '并发编程').length,
+        advanced: (window.INTERVIEW_DATA || []).filter(q => q.category === '高级特性').length
     };
 
     // Helper to safely set text content of elements if they exist
@@ -64,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText('count-db', counts.db);
         safeSetText('count-perf', counts.perf);
         safeSetText('count-concurrent', counts.concurrent);
+        safeSetText('count-advanced', counts.advanced);
         
         // Also support older cached HTML with count-web3 if needed
         safeSetText('count-web3', (window.INTERVIEW_DATA || []).filter(q => q.category === 'Web3 核心').length);
