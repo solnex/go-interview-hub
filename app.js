@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 
-    // Custom marked renderer to inject copy buttons into pre blocks
+    // Custom marked renderer to inject copy buttons and prevent translation corruption
     const renderer = new marked.Renderer();
     renderer.code = function(code, infostring, escaped) {
         let text = '';
@@ -103,7 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         lang = (lang || '').match(/\S*/)[0];
         const cleanCode = escapeHtml(text);
-        return `<pre class="language-${lang}"><button class="copy-code-btn" onclick="copyCodeBlock(this)"><i class="fa-regular fa-copy"></i> Copy</button><code class="language-${lang}">${cleanCode}</code></pre>`;
+        return `<pre class="language-${lang} notranslate" translate="no"><button class="copy-code-btn" onclick="copyCodeBlock(this)"><i class="fa-regular fa-copy"></i> Copy</button><code class="language-${lang} notranslate" translate="no">${cleanCode}</code></pre>`;
+    };
+    renderer.codespan = function(code) {
+        let text = typeof code === 'object' && code !== null ? code.text : code;
+        return `<code class="notranslate" translate="no">${text}</code>`;
     };
     marked.use({ renderer });
 
