@@ -56,8 +56,8 @@ FILES_CONFIG = [
     }
 ]
 
-# Base directory for the interview questions (parent of webpage)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Base directory for the interview questions (webpage/docs)
+BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
 
 def parse_file(config):
     file_path = os.path.join(BASE_DIR, config["path"])

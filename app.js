@@ -111,7 +111,84 @@ document.addEventListener('DOMContentLoaded', () => {
         let text = typeof code === 'object' && code !== null ? code.text : code;
         return `<code class="notranslate" translate="no">${text}</code>`;
     };
-    marked.use({ renderer });
+
+    // Custom marked extensions for KaTeX rendering
+    const inlineMath = {
+        name: 'inlineMath',
+        level: 'inline',
+        start(src) { return src.indexOf('$'); },
+        tokenizer(src, tokens) {
+            // 1. Match block math inside inline text: $$...$$
+            const blockMatch = src.match(/^\$\$\n?([\s\S]+?)\n?\$\$/);
+            if (blockMatch) {
+                return {
+                    type: 'inlineMath',
+                    raw: blockMatch[0],
+                    text: blockMatch[1],
+                    displayMode: true
+                };
+            }
+            // 2. Match inline math: $...$
+            const inlineMatch = src.match(/^\$((?!\$)[^$\n]+?)\$/);
+            if (inlineMatch) {
+                return {
+                    type: 'inlineMath',
+                    raw: inlineMatch[0],
+                    text: inlineMatch[1],
+                    displayMode: false
+                };
+            }
+        },
+        renderer(token) {
+            if (typeof katex !== 'undefined') {
+                try {
+                    const html = katex.renderToString(token.text, { 
+                        displayMode: token.displayMode || false, 
+                        throwOnError: false 
+                    });
+                    return token.displayMode ? `<div class="katex-block">${html}</div>` : html;
+                } catch (err) {
+                    console.error("KaTeX inline error: ", err);
+                    return token.raw;
+                }
+            }
+            return token.raw;
+        }
+    };
+
+    const blockMath = {
+        name: 'blockMath',
+        level: 'block',
+        start(src) { return src.indexOf('$$'); },
+        tokenizer(src, tokens) {
+            // Match block math: $$...$$
+            const match = src.match(/^\$\$\n?([\s\S]+?)\n?\$\$/);
+            if (match) {
+                return {
+                    type: 'blockMath',
+                    raw: match[0],
+                    text: match[1]
+                };
+            }
+        },
+        renderer(token) {
+            if (typeof katex !== 'undefined') {
+                try {
+                    const html = katex.renderToString(token.text, { displayMode: true, throwOnError: false });
+                    return `<div class="katex-block">${html}</div>`;
+                } catch (err) {
+                    console.error("KaTeX block error: ", err);
+                    return `<pre class="katex-error">${token.raw}</pre>`;
+                }
+            }
+            return `<pre class="katex-raw">${token.raw}</pre>`;
+        }
+    };
+
+    marked.use({
+        renderer,
+        extensions: [blockMath, inlineMath]
+    });
 
     // 5. Render Questions Function
     function renderQuestions() {
