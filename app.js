@@ -45,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         db: (window.INTERVIEW_DATA || []).filter(q => q.category === '数据库').length,
         perf: (window.INTERVIEW_DATA || []).filter(q => q.category === '性能优化').length,
         concurrent: (window.INTERVIEW_DATA || []).filter(q => q.category === '并发编程').length,
-        advanced: (window.INTERVIEW_DATA || []).filter(q => q.category === '高级特性').length
+        advanced: (window.INTERVIEW_DATA || []).filter(q => q.category === '高级特性').length,
+        rust: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Rust 基础').length,
+        solana: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Solana 进阶').length
     };
 
     // Helper to safely set text content of elements if they exist
@@ -66,6 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText('count-perf', counts.perf);
         safeSetText('count-concurrent', counts.concurrent);
         safeSetText('count-advanced', counts.advanced);
+        safeSetText('count-rust', counts.rust);
+        safeSetText('count-solana', counts.solana);
         
         // Also support older cached HTML with count-web3 if needed
         safeSetText('count-web3', (window.INTERVIEW_DATA || []).filter(q => q.category === 'Web3 核心').length);

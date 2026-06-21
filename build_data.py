@@ -53,6 +53,16 @@ FILES_CONFIG = [
         "path": "进阶/高级特性03.md",
         "category": "高级特性",
         "range": range(86, 94)
+    },
+    {
+        "path": "rust/rust基础.md",
+        "category": "Rust 基础",
+        "range": range(94, 101)
+    },
+    {
+        "path": "rust/solana.md",
+        "category": "Solana 进阶",
+        "range": range(101, 114)
     }
 ]
 
