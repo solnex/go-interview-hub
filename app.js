@@ -47,7 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         concurrent: (window.INTERVIEW_DATA || []).filter(q => q.category === '并发编程').length,
         advanced: (window.INTERVIEW_DATA || []).filter(q => q.category === '高级特性').length,
         rust: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Rust 基础').length,
-        solana: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Solana 进阶').length
+        solana: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Solana 进阶').length,
+        predictionMarket: (window.INTERVIEW_DATA || []).filter(q => q.category === '预测市场').length
     };
 
     // Helper to safely set text content of elements if they exist
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText('count-advanced', counts.advanced);
         safeSetText('count-rust', counts.rust);
         safeSetText('count-solana', counts.solana);
+        safeSetText('count-prediction-market', counts.predictionMarket);
         
         // Also support older cached HTML with count-web3 if needed
         safeSetText('count-web3', (window.INTERVIEW_DATA || []).filter(q => q.category === 'Web3 核心').length);
@@ -399,6 +401,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             currentCategory = btn.getAttribute('data-category');
             renderQuestions();
+
+            // Toggle sub-menu when clicking 'All Modules'
+            if (btn.id === 'btn-all-modules') {
+                const subMenuContainer = document.getElementById('sub-menu-container');
+                if (subMenuContainer) {
+                    const isOpen = subMenuContainer.classList.contains('open');
+                    if (isOpen) {
+                        subMenuContainer.classList.remove('open');
+                        btn.classList.add('collapsed');
+                    } else {
+                        subMenuContainer.classList.add('open');
+                        btn.classList.remove('collapsed');
+                    }
+                }
+            }
         });
     });
 

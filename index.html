@@ -42,51 +42,63 @@
             </div>
             
             <nav class="sidebar-menu">
-                <button class="nav-item active" data-category="all">
-                    <i class="fa-solid fa-layer-group"></i>
-                    <span>全部模块</span>
-                    <span class="count-badge" id="count-all">0</span>
-                </button>
-                <button class="nav-item" data-category="数据结构">
-                    <i class="fa-solid fa-sitemap"></i>
-                    <span>数据结构</span>
-                    <span class="count-badge" id="count-datastruct">0</span>
-                </button>
-                <button class="nav-item" data-category="流程控制">
-                    <i class="fa-solid fa-code-branch"></i>
-                    <span>流程控制</span>
-                    <span class="count-badge" id="count-flow">0</span>
-                </button>
-                <button class="nav-item" data-category="数据库">
-                    <i class="fa-solid fa-database"></i>
-                    <span>数据库</span>
-                    <span class="count-badge" id="count-db">0</span>
-                </button>
-                <button class="nav-item" data-category="性能优化">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>性能优化</span>
-                    <span class="count-badge" id="count-perf">0</span>
-                </button>
-                <button class="nav-item" data-category="并发编程">
-                    <i class="fa-solid fa-network-wired"></i>
-                    <span>并发编程</span>
-                    <span class="count-badge" id="count-concurrent">0</span>
-                </button>
-                <button class="nav-item" data-category="高级特性">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>高级特性</span>
-                    <span class="count-badge" id="count-advanced">0</span>
-                </button>
-                <button class="nav-item" data-category="Rust 基础">
-                    <i class="fa-brands fa-rust"></i>
-                    <span>Rust 基础</span>
-                    <span class="count-badge" id="count-rust">0</span>
-                </button>
-                <button class="nav-item" data-category="Solana 进阶">
-                    <i class="fa-solid fa-cubes"></i>
-                    <span>Solana 进阶</span>
-                    <span class="count-badge" id="count-solana">0</span>
-                </button>
+                <div class="nav-group">
+                    <button class="nav-item active" data-category="all" id="btn-all-modules">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>全部模块</span>
+                        <div class="badge-arrow-group">
+                            <span class="count-badge" id="count-all">0</span>
+                            <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                        </div>
+                    </button>
+                    <div class="sub-menu-container open" id="sub-menu-container">
+                        <button class="nav-item sub-item" data-category="数据结构">
+                            <i class="fa-solid fa-sitemap"></i>
+                            <span>数据结构</span>
+                            <span class="count-badge" id="count-datastruct">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="流程控制">
+                            <i class="fa-solid fa-code-branch"></i>
+                            <span>流程控制</span>
+                            <span class="count-badge" id="count-flow">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="数据库">
+                            <i class="fa-solid fa-database"></i>
+                            <span>数据库</span>
+                            <span class="count-badge" id="count-db">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="性能优化">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>性能优化</span>
+                            <span class="count-badge" id="count-perf">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="并发编程">
+                            <i class="fa-solid fa-network-wired"></i>
+                            <span>并发编程</span>
+                            <span class="count-badge" id="count-concurrent">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="高级特性">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>高级特性</span>
+                            <span class="count-badge" id="count-advanced">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="Rust 基础">
+                            <i class="fa-brands fa-rust"></i>
+                            <span>Rust 基础</span>
+                            <span class="count-badge" id="count-rust">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="Solana 进阶">
+                            <i class="fa-solid fa-cubes"></i>
+                            <span>Solana 进阶</span>
+                            <span class="count-badge" id="count-solana">0</span>
+                        </button>
+                        <button class="nav-item sub-item" data-category="预测市场">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>预测市场</span>
+                            <span class="count-badge" id="count-prediction-market">0</span>
+                        </button>
+                    </div>
+                </div>
             </nav>
             
             <div class="sidebar-footer">
@@ -122,19 +134,18 @@
                 </div>
             </header>
 
-            <!-- Dashboard / Overview -->
             <section class="dashboard-banner">
                 <div class="banner-title">
                     <h2>Go & Web3 后端高级研发面试精华指南</h2>
-                    <p>汇集 113 道工业级高频面试绝杀，深入源码机制与生产实战避坑指南</p>
+                    <p>汇集 120 道工业级高频面试绝杀，深入源码机制与生产实战避坑指南</p>
                 </div>
                 <div class="stats-panel">
                     <div class="stat-card">
-                        <span class="stat-num" id="stat-total-count">113</span>
+                        <span class="stat-num" id="stat-total-count">120</span>
                         <span class="stat-label">总题目数</span>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-num" id="stat-parsed-categories">8</span>
+                        <span class="stat-num" id="stat-parsed-categories">9</span>
                         <span class="stat-label">核心模块</span>
                     </div>
                     <div class="stat-card">

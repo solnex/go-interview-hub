@@ -63,6 +63,11 @@ FILES_CONFIG = [
         "path": "rust/solana.md",
         "category": "Solana 进阶",
         "range": range(101, 114)
+    },
+    {
+        "path": "进阶/预测市场.md",
+        "category": "预测市场",
+        "range": range(114, 121)
     }
 ]
 

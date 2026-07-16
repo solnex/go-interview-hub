@@ -260,6 +260,67 @@ body {
 .nav-item[data-category="数据库"].active { box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.3); background: rgba(249, 115, 22, 0.05); }
 .nav-item[data-category="性能优化"].active { box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
 .nav-item[data-category="并发编程"].active { box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
+.nav-item[data-category="Rust 基础"].active { box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.3); background: rgba(234, 88, 12, 0.05); }
+.nav-item[data-category="Solana 进阶"].active { box-shadow: inset 0 0 0 1px rgba(20, 241, 149, 0.3); background: rgba(20, 241, 149, 0.05); }
+.nav-item[data-category="预测市场"].active { box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.3); background: rgba(139, 92, 246, 0.05); }
+
+/* --- Submenu Dropdown & Scrollable Menu --- */
+.badge-arrow-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-arrow {
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: transform var(--transition-normal);
+}
+
+.collapsed .dropdown-arrow {
+    transform: rotate(-90deg);
+}
+
+.sub-menu-container {
+    max-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: max-height var(--transition-normal) ease-in-out, padding var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 12px;
+    margin-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.light-theme .sub-menu-container {
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sub-menu-container.open {
+    max-height: 320px; /* High enough for scrollability */
+    padding-bottom: 4px;
+    margin-top: 4px;
+}
+
+.sub-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+}
+
+/* Custom scrollbar inside the sub-menu */
+.sub-menu-container::-webkit-scrollbar {
+    width: 4px;
+}
+.sub-menu-container::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 20px;
+}
+.sub-menu-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.4);
+}
 
 .sidebar-footer {
     border-top: 1px solid var(--border-color);
