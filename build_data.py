@@ -68,6 +68,11 @@ FILES_CONFIG = [
         "path": "进阶/预测市场.md",
         "category": "预测市场",
         "range": range(114, 121)
+    },
+    {
+        "path": "进阶/跨链桥.md",
+        "category": "跨链桥",
+        "range": range(121, 127)
     }
 ]
 

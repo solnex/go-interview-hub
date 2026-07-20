@@ -1284,7 +1284,7 @@ window.INTERVIEW_DATA = [
       "type": "tip",
       "text": "1. **非性能瓶颈原因**：`EntryPoint` 虽是单例合约，但它只是存储在所有验证者节点磁盘中的**公共库函数**。它本身几乎不存储用户业务状态（USDC 余额在代币合约中，持仓在预测合约中）。EVM 执行时属于**状态无冲突的独立内存分片修改**，支持并行 EVM。真正的瓶颈在于底层的 Block Gas Limit 和出块速度。\n2. **Bundler 优化设计**：\n- **批量处理（Batching）**：合并散户的多个 `UserOp` 数组，一次性调用 `handleOps`。\n- **多通道 Nonce 并发管道**：通过 EOA 钱包池轮询，避免单 Nonce 阻塞。\n- **时效性 RBF**：若 1 个出块时间内未被确认，自动使用 Nonce + 提价 15% 抢跑覆盖。\n- **链下预裁剪**：调用 `simulateValidation` 剔除无效交易，防止因用户余额不足导致代付手续费损失。"
     },
-    "content": "#### 一、 EntryPoint 的单例模式与吞吐量本质\n传统的 Web2 架构中，单台服务器会面临 CPU 与带宽瓶颈。但智能合约只是被各 EVM 节点并发/串行调用的**公共字节码**。\n由于 `EntryPoint` 本身是不保留用户状态的（Stateless），在并行 EVM（如 Monad、Aptos 生态）链上运行时，由于不同用户的智能钱包和 USDC 余额互不交叠，EVM 调度器可以无锁并行处理它们，因此 `EntryPoint` 绝不会成为状态锁瓶颈。\n\n#### 二、 工业级 Bundler 核心架构\n为了高效率、低成本地向 `EntryPoint` 提送交易，Bundler 应包含以下核心架构设计：\n1. **定量/定时批处理**：\n   - 后端设立高速内存队列，接收散户签名的 `UserOp`。\n   - 当积攒满 30 个 `UserOp`，或者预估总 Gas 达到 5,000,000，或者距离上一次上链过去 1.5 秒，立刻执行一次 `handleOps(UserOperation[] ops)`。\n2. **多账号并发流水线（Wallet Pool）**：\n   - 准备 10 个以上独立的 EOA 充当 Relayer。\n   - 采用 Round-Robin（轮询）算法，无需等待 Batch 1 确认，下一批 Batch 2 立即使用 Bundler B 的私钥进行打包发送，彻底消除 Nonce 阻塞。\n3. **恶意订单预裁剪（Pre-verification）**：\n   - 在将 `UserOperation` 编入数组前，Bundler 在本地节点上调用 `eth_call` 模拟执行 `simulateValidation`。\n   - 若发现用户私自转移了资产或签名过期，立即踢出队列，防止打包上链执行回滚，白白损耗 Bundler 垫付的 Calldata 燃料费。\n\n---"
+    "content": "#### 一、 EntryPoint 的单例模式与吞吐量本质\n传统的 Web2 架构中，单台服务器会面临 CPU 与带宽瓶颈。但智能合约只是被各 EVM 节点并发/串行调用的**公共字节码**。\n由于 `EntryPoint` 本身是不保留用户状态的（Stateless），在并行 EVM（如 Monad、Aptos 生态）链上运行时，由于不同用户的智能钱包和 USDC 余额互不交叠，EVM 调度器可以无锁并行处理它们，因此 `EntryPoint` 绝不会成为状态锁瓶颈。\n\n#### 二、 工业级 Bundler 核心架构\n为了高效率、低成本地向 `EntryPoint` 提送交易，Bundler 应包含以下核心架构设计：\n1. **定量/定时批处理**：\n   - 后端设立高速内存队列，接收散户签名的 `UserOp`。\n   - 当积攒满 30 个 `UserOp`，或者预估总 Gas 达到 5,000,000，或者距离上一次上链过去 1.5 秒，立刻执行一次 `handleOps(UserOperation[] ops)`。\n2. **多账号并发流水线（Wallet Pool）**：\n   - 准备 10 个以上独立的 EOA 充当 Relayer。\n   - 采用 Round-Robin（轮询）算法，无需等待 Batch 1 确认，下一批 Batch 2 立即使用 Bundler B 的私钥进行打包发送，彻底消除 Nonce 阻塞。\n3. **恶意订单预裁剪（Pre-verification）**：\n   - 在将 \n   `UserOperation` 编入数组前，Bundler 在本地节点上调用 `eth_call` 模拟执行 `simulateValidation`。\n   - 若发现用户私自转移了资产或签名过期，立即踢出队列，防止打包上链执行回滚，白白损耗 Bundler 垫付的 Calldata 燃料费。\n\n---"
   },
   {
     "id": "Q118",
@@ -1318,5 +1318,71 @@ window.INTERVIEW_DATA = [
       "text": "1. **2-of-3 门限签名机制**：私钥在链下拆分为三个分片：**Shard A**（用户设备本地）、**Shard B**（托管商服务器，谷歌登录解锁）和 **Shard C**（备份恢复片）。只要集齐任意 2 个分片，就可以在链下内存中重组出完整私钥或进行多方签名。\n2. **分片 A 丢失时的恢复流程**：用户通过谷歌登录解锁 Shard B，输入预设的“备份密码”解密并载入 Shard C。利用 B+C 在后台重新计算重组钱包，并在新设备上静默生成全新的 **Shard A'**，作废旧分片。\n3. **永久锁死（死锁）的边界**：**“谷歌账号永久被封/注销”**（无法获取 Shard B）且同时**“忘记了恢复密码/备份不可用”**（无法获取 Shard C），此时可支配分片数为 0，钱包彻底丢失。"
     },
     "content": "#### 一、 MPC（多方计算）三片分片定位\n非托管嵌入式钱包（如 Privy、Magic.link）通过门限密码学（TSS/MPC）避免了传统钱包备份助记词的痛点：\n- **分片 A (Device Shard)**：存在用户当前使用的设备本地（如浏览器的 LocalStorage 或 App 的安全沙箱中）。\n- **分片 B (Auth Shard)**：存放在托管商（Privy）的安全服务器上。当用户通过谷歌、邮箱或 OAuth 登录成功时，托管商才会对前端释放此分片。\n- **分片 C (Recovery Shard)**：备份分片。由用户输入的一个自定义密码加密后，上传至云端备份（或开发者托管的独立数据库）。\n\n#### 二、 两种恢复模式设计\n##### 1. 用户自管模式（User-Managed Passphrase）\n- **触发**：新设备登录，检测到本地不存在 Shard A。\n- **流程**：用户谷歌登录解锁 Shard B，系统弹出输入“恢复密码”提示。输入密码在本地解密下载的 Shard C，联合 Shard B 重构钱包，并在新设备本地生成新 Shard A'。\n\n##### 2. 开发者管理模式（Developer-Managed Recovery）\n- **触发**：面向 Web2 散户的无感体验。\n- **流程**：Shard C 由项目方云端协同加密代管。用户仅需谷歌登录成功（解密 Shard B），前端静默向安全云端请求授权并拉取 Shard C 进行运算。用户完全无感知即可在新设备上找回钱包。\n\n#### 三、 架构师安全避险建议\n为了防止极端情况下（如 Privy 服务关停、用户谷歌账号注销、备份丢失）导致的用户资产纠纷，在设计预测市场前端时应做到：\n1. **高额资产导出引导**：当用户钱包内资产（USDC）达到一定额度，前端应强力引导并指示用户使用“安全导出明文私钥（Export Private Key）”功能，自行将私钥导入 MetaMask 备份，移出 MPC 非托管托管边界。\n2. **多重备份手段**：提供 iCloud / Google Drive 的双通道 Shard C 加密备份机制，降低单点备份失效风险。"
+  },
+  {
+    "id": "Q121",
+    "number": 121,
+    "title": "跨链桥为什么通常选择在源链上构建默克尔树（Merkle Tree），而不是直接把交易数据传到目标链？",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "tip",
+      "text": "1. **数据压缩与 Gas 优化**：逐条传输交易在目标链上的存储和验证成本是天价。源链使用增量默克尔树（Incremental Merkle Tree）可以将成千上万笔跨链请求“压缩”成一个 32 字节的 `Merkle Root`，每次插入复杂度仅为 $O(\\log N)$。\n2. **确定性与抗审查性**：源链合约在 EVM 执行交易时自动将 Leaf 写入树中，由源链全网共识确定交易的严格顺序（Canonical Ordering）。\n3. **降低信任假设**：源链计算 Root 确保了数据的真实性，Relayer 降级为纯粹的“搬运工”，即使 Relayer 完全作恶也无法凭空伪造不存在的交易。"
+    },
+    "content": "#### 一、 考核要点\n考察对链上 Gas 成本、状态数据压缩（Data Availability）以及无信任机制（Trustlessness）的理解。\n\n#### 二、 深度解析\n- **数据压缩与 Gas 优化**：逐条传输交易在目标链上的存储和验证成本是天价。源链使用增量默克尔树（Incremental Merkle Tree）可以将成千上万笔跨链请求“压缩”成一个 32 字节的 `Merkle Root`，每次插入复杂度仅为 $O(\\log N)$。\n- **确定性与抗审查性**：源链合约在 EVM 执行交易时自动将 Leaf 写入树中，由源链全网共识确定交易的严格顺序（Canonical Ordering）。\n- **降低信任假设**：源链计算 Root 确保了数据的真实性，Relayer 降级为纯粹的“搬运工”，即使 Relayer 完全作恶也无法凭空伪造不存在的交易。\n\n---"
+  },
+  {
+    "id": "Q122",
+    "number": 122,
+    "title": "目标链如何防止 Relayer 在同步 Merkle Root 时造假？请列举至少三种工业界主流解决方案。",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "important",
+      "text": "1. **轻节点 / 状态验证（Light Client Bridge）**：Relayer 提交 Root 时必须附带源链的 Block Header 及 2/3 以上验证节点的签名，目标链通过 `ecrecover` / BLS 校验签名后才认可该 Root（如 Cosmos IBC）。\n2. **角色分离与多签预言机（Oracle & Relayer）**：拆分状态同步与证明传输（如 LayerZero 架构），或使用 TSS/MPC 多签网络（如 Chainlink CCIP / Axelar），只有多节点达成共识才放行。\n3. **乐观验证（Optimistic Verification）**：允许 Relayer 质押保证金后直接提交 Root，但设置挑战期（如 30 分钟）。链下 Watcher 若发现造假可提交 Fraud Proof 没收其保证金（如 Nomad）。\n4. **零知识证明（ZK-Bridge）**：链下生成 ZK-SNARK 证明 Root 的计算及源链共识无误，目标链秒级验证 ZK 证明（如 Succinct）。"
+    },
+    "content": "#### 一、 考核要点\n考察对跨链桥传输层安全机制（Transport Security Model）的掌握。\n\n#### 二、 深度解析\n- **轻节点 / 状态验证（Light Client Bridge）**：Relayer 提交 Root 时必须附带源链的 Block Header 及 2/3 以上验证节点的签名，目标链通过 `ecrecover` / BLS 校验签名后才认可该 Root（如 Cosmos IBC）。\n- **角色分离与多签预言机（Oracle & Relayer）**：拆分状态同步与证明传输（如 LayerZero 架构），或使用 TSS/MPC 多签网络（如 Chainlink CCIP / Axelar），只有多节点达成共识才放行。\n- **乐观验证（Optimistic Verification）**：允许 Relayer 质押保证金后直接提交 Root，但设置挑战期（如 30 分钟）。链下 Watcher 若发现造假可提交 Fraud Proof 没收其保证金（如 Nomad）。\n- **零知识证明（ZK-Bridge）**：链下生成 ZK-SNARK 证明 Root 的计算及源链共识无误，目标链秒级验证 ZK 证明（如 Succinct）。\n\n---"
+  },
+  {
+    "id": "Q123",
+    "number": 123,
+    "title": "请详细说明“轻节点（Light Client）”在目标链上验证一笔跨链提现的完整数据流与解包过程。",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "tip",
+      "text": "1. **链下部分（Relayer / Prover）**：\n- 监听源链事件，抓取目标 `Block Header` 及验证者签名；\n- 调用源链 `eth_getProof` RPC，生成从源链 `State Root` 到跨链桥合约存储槽位 `currentRoot` 的 **Storage Proof（存储证明）**；\n- 构造用户提款的 **Merkle Proof**，将所有数据提交给目标链。\n2. **链上部分（Target Bridge Contract）**：\n- **验头**：校验签名，确保 `Block Header` 真实无误，提取其中的 `State Root`；\n- **验路径**：用 `Storage Proof` 校验 `currentRoot` 确实存在于该 `State Root` 中；\n- **验 Leaf**：用 `Merkle Proof` 校验用户的 `Leaf`（提款消息）存在于 `currentRoot` 中；\n- **防重放**：检查 `isClaimed[leaf]` 未被使用，随后解锁/铸造资产。"
+    },
+    "content": "#### 一、 考核要点\n考察对链上/链下计算分离架构（Storage Proof / MPT 验证）细节的掌握。\n\n#### 二、 深度解析\n- **链下部分（Relayer / Prover）**：\n  1. 监听源链事件，抓取目标 `Block Header` 及验证者签名；\n  2. 调用源链 `eth_getProof` RPC，生成从源链 `State Root` 到跨链桥合约存储槽位 `currentRoot` 的 **Storage Proof（存储证明）**；\n  3. 构造用户提款的 **Merkle Proof**，将所有数据提交给目标链。\n- **链上部分（Target Bridge Contract）**：\n  1. **验头**：校验签名，确保 `Block Header` 真实无误，提取其中的 `State Root`；\n  2. **验路径**：用 `Storage Proof` 校验 `currentRoot` 确实存在于该 `State Root` 中；\n  3. **验 Leaf**：用 `Merkle Proof` 校验用户的 `Leaf`（提款消息）存在于 `currentRoot` 中；\n  4. **防重放**：检查 `isClaimed[leaf]` 未被使用，随后解锁/铸造资产。\n\n---"
+  },
+  {
+    "id": "Q124",
+    "number": 124,
+    "title": "轻节点合约如果放弃了 Admin 权限（不可变合约），它如何保证同步进来的源链质押节点（Validator Set）变更依然可信？",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "tip",
+      "text": "1. **旧节点为新节点背书（Chain of Trust）**：源链在发生 Epoch 变更（如以太坊 Sync Committee 轮换）时，**上一代旧验证者集合（Set N）** 会对**下一代新验证者集合（Set N+1）** 进行门限签名。\n2. **无权限自我演进**：目标链轻节点合约内部维护着当前被信任的 Set N。当任何人（Relayer）提交 Set N+1 时，合约使用内存中的 Set N 去校验签名。校验通过后，合约**自动覆写状态**更新为 Set N+1。\n3. **数学归纳法**：只要创世部署时的初始锚点（Genesis Anchor）是真实公认的，后续所有的节点变更均由上代密码学签名严格递推，全程不需要任何 Admin 介入。"
+    },
+    "content": "#### 一、 考核要点\n考察对“信任链（Chain of Trust）”与密码学递推证明（Inductive Proof）的理解。\n\n#### 二、 深度解析\n- **旧节点为新节点背书（Chain of Trust）**：源链在发生 Epoch 变更（如以太坊 Sync Committee 轮换）时，**上一代旧验证者集合（Set N）** 会对**下一代新验证者集合（Set N+1）** 进行门限签名。\n- **无权限自我演进**：目标链轻节点合约内部维护着当前被信任的 Set N。当任何人（Relayer）提交 Set N+1 时，合约使用内存中的 Set N 去校验签名。校验通过后，合约**自动覆写状态**更新为 Set N+1。\n- **数学归纳法**：只要创世部署时的初始锚点（Genesis Anchor）是真实公认的，后续所有的节点变更均由上代密码学签名严格递推，全程不需要任何 Admin 介入。\n\n---"
+  },
+  {
+    "id": "Q125",
+    "number": 125,
+    "title": "跨链桥开发中最常见的“重放攻击（Replay Attack）”有哪些维度？如何从合约层进行防护？",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "caution",
+      "text": "1. **同链重复提现（Double Claiming）**：用户拿着同一个有效的 Merkle Proof 在目标链多次调用提款。\n- *防护*：链上维护 `mapping(bytes32 => bool) isClaimed`（Nullifier），执行完立刻将 `leafHash` 标记为 true。\n2. **跨链/跨合约重放（Cross-Chain Replay）**：用户将 Chain A $\\rightarrow$ Chain B 的有效 Proof 拿到 Chain C，或者拿去另一个桥合约提款。\n- *防护*：构建 Message 编码时强制绑定领域分隔符（Domain Separator），必须包含 `nonce`、`sourceChainId`、`targetChainId` 和 `bridgeAddress`。\n3. **分叉链重放（Fork Replay）**：源链或目标链发生硬分叉后， Proof 在两条链上均合法。\n- *防护*：提款消息中动态引入 `block.chainid` 校验。"
+    },
+    "content": "#### 一、 考核要点\n考察智能合约安全防范（Smart Contract Security）实战经验。\n\n#### 二、 深度解析\n- **同链重复提现（Double Claiming）**：用户拿着同一个有效的 Merkle Proof 在目标链多次调用提款。\n  - *防护*：链上维护 `mapping(bytes32 => bool) isClaimed`（Nullifier），执行完立刻将 `leafHash` 标记为 true。\n- **跨链/跨合约重放（Cross-Chain Replay）**：用户将 Chain A $\\rightarrow$ Chain B 的有效 Proof 拿到 Chain C，或者拿去另一个桥合约提款。\n  - *防护*：构建 Message 编码时强制绑定领域分隔符（Domain Separator），必须包含 `nonce`、`sourceChainId`、`targetChainId` 和 `bridgeAddress`。\n- **分叉链重放（Fork Replay）**：源链或目标链发生硬分叉后， Proof 在两条链上均合法。\n  - *防护*：提款消息中动态引入 `block.chainid` 校验。\n\n---"
+  },
+  {
+    "id": "Q126",
+    "number": 126,
+    "title": "当增量默克尔树的叶子节点数量达到树的最大容量（例如深度 DEPTH=32 满了）时，在 Solidity 工程上有哪些处理方案？",
+    "category": "跨链桥",
+    "core_answer": {
+      "type": "tip",
+      "text": "1. **预留足够深度（设计预留）**：一般将 `DEPTH` 设为 32（可存约 42.9 亿条），在实际业务生命周期内几乎不可能填满，插入复杂度 $O(32)$ 的 Gas 开销完全可接受。\n2. **滚动切换新树（Epoch-based Roll）**：在合约中维护 `treeId`，当 `nextIndex == 2**DEPTH` 时，触发翻页逻辑：`treeId++` 并重置 `nextIndex` 和缓存数组 `filledSubtrees`。验证提款时需携带 `treeId` 检索 `roots[treeId]`。\n3. **二层树结构（Tree of Trees / MMR）**：子树填满后，将满子树的 `SubRoot` 作为 Leaf 插入上层的 Master Tree 中，提现时提交两层叠加证明。"
+    },
+    "content": "#### 一、 考核要点\n考察链上数据结构设计（Data Structure & Capacity Design）与工程落地能力。\n\n#### 二、 深度解析\n- **预留足够深度（设计预留）**：一般将 `DEPTH` 设为 32（可存约 42.9 亿条），在实际业务生命周期内几乎不可能填满，插入复杂度 $O(32)$ 的 Gas 开销完全可接受。\n- **滚动切换新树（Epoch-based Roll）**：在合约中维护 `treeId`，当 `nextIndex == 2**DEPTH` 时，触发翻页逻辑：`treeId++` 并重置 `nextIndex` 和缓存数组 `filledSubtrees`。验证提款时需携带 `treeId` 检索 `roots[treeId]`。\n- **二层树结构（Tree of Trees / MMR）**：子树填满后，将满子树的 `SubRoot` 作为 Leaf 插入上层的 Master Tree 中，提现时提交两层叠加证明。"
   }
 ];

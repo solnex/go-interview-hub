@@ -48,7 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
         advanced: (window.INTERVIEW_DATA || []).filter(q => q.category === '高级特性').length,
         rust: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Rust 基础').length,
         solana: (window.INTERVIEW_DATA || []).filter(q => q.category === 'Solana 进阶').length,
-        predictionMarket: (window.INTERVIEW_DATA || []).filter(q => q.category === '预测市场').length
+        predictionMarket: (window.INTERVIEW_DATA || []).filter(q => q.category === '预测市场').length,
+        crossChainBridge: (window.INTERVIEW_DATA || []).filter(q => q.category === '跨链桥').length
     };
 
     // Helper to safely set text content of elements if they exist
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         safeSetText('count-rust', counts.rust);
         safeSetText('count-solana', counts.solana);
         safeSetText('count-prediction-market', counts.predictionMarket);
+        safeSetText('count-cross-chain', counts.crossChainBridge);
         
         // Also support older cached HTML with count-web3 if needed
         safeSetText('count-web3', (window.INTERVIEW_DATA || []).filter(q => q.category === 'Web3 核心').length);
